@@ -1,0 +1,17 @@
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.frame-wrapper {
+  position: absolute;
+  top: -140px;
+  bottom: -550px;
+  left: 0;
+  right: 0;
+}
+
+.frame {
+  height: 100%;
+  width: 100%;
+}
