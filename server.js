@@ -9,7 +9,7 @@ const baseURL = 'https://www.azlyrics.com/';
 app.use(express.static(__dirname + '/public'));
 
 app.get('/song/', (req, res, next) => {
-  console.log('song request by url ', req.query);
+  console.log('song request by url ', req.query.url);
   // scrape page by url
   getLyricsFromPage(req.query.url).then(
     song => {

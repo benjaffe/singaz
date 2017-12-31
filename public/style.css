@@ -1,17 +1,11 @@
-html, body {
-  height: 100%;
-  margin: 0;
+.attribution {
+  font-size: 1.3em;
+  padding: 0 20px;
+  font-family: monospace;
+  white-space: pre-line;
 }
-
-.frame-wrapper {
-  position: absolute;
-  top: -140px;
-  bottom: -550px;
-  left: 0;
-  right: 0;
-}
-
-.frame {
-  height: 100%;
-  width: 100%;
+.lyrics {
+  padding: 20px;
+  font-family: monospace;
+  white-space: pre-line;
 }
