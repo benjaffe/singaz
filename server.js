@@ -48,10 +48,6 @@ app.get('/search/', (req, res, next) => {
       // get lyrics for first result
       getLyricsFromPage(url).then(song => {
         console.log('song fetched', song);
-        // res.send({
-        //   song: song,
-        //   results: results,
-        // });
         res.send({type: 'song', song: song});
       });
     },
