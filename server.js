@@ -12,6 +12,13 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/song/', (req, res, next) => {
   console.log('song request by url ', req.query.url);
+  if (!req.query.url.startsWith('https://www.azlyrics.com')) {
+    res.send({
+      type: 'error',
+      text: `Sorry, only urls from azlyrics.com are supported.`,
+    });
+    return;
+  }
   // scrape page by url
   getLyricsFromPage(req.query.url).then(
     song => {
