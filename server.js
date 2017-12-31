@@ -5,6 +5,7 @@ const {
   getLyricsFromPage,
   getSearchResultsFromPage,
 } = require('./src/getLyrics');
+const {mangleLyrics} = require('./src/mangleLyrics');
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/song/', (req, res, next) => {
   console.log('song request by url ', req.query.url);
+  let wordsToSendToClient = [];
   if (!req.query.url.startsWith('https://www.azlyrics.com')) {
     res.send({
       type: 'error',
@@ -22,13 +24,40 @@ app.get('/song/', (req, res, next) => {
   // scrape page by url
   getLyricsFromPage(req.query.url).then(
     song => {
-      res.send(song);
+      const sendWordQueue = throttle(() => {
+        res.send({type: 'tokens', tokens: wordsToSendToClient});
+        wordsToSendToClient = [];
+      }, 500);
+
+      // res.send({type: 'song', song: song});
+      // console.log('yo');
+      mangleLyrics(song.lyrics, newWords => {
+        wordsToSendToClient = wordsToSendToClient.concat(newWords);
+        sendWordQueue();
+      });
     },
     () => {
       console.log('failed');
     }
   );
 });
+
+function throttle(callback, wait, context = this) {
+  let timeout = null;
+  let callbackArgs = null;
+
+  const later = () => {
+    callback.apply(context, callbackArgs);
+    timeout = null;
+  };
+
+  return function() {
+    if (!timeout) {
+      callbackArgs = arguments;
+      timeout = setTimeout(later, wait);
+    }
+  };
+}
 
 app.get('/search/', (req, res, next) => {
   console.log('song request by search query ', req.query.q);

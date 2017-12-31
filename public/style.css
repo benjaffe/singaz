@@ -1,6 +1,19 @@
-.attribution {
-  font-size: 1.3em;
+.topbar {
+  position: fixed;
+  background: #aaa;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100px;
+}
+.title {
+  background: #fcf;
   padding: 0 20px;
+  font-family: monospace;
+  white-space: pre-line;
+}
+.attribution {
+  padding: 8px 20px 0;
   font-family: monospace;
   white-space: pre-line;
 }
@@ -8,4 +21,40 @@
   padding: 20px;
   font-family: monospace;
   white-space: pre-line;
+}
+
+.subButtons {
+  display: flex;
+  align-items: stretch;
+}
+.buttons {
+  display: flex;
+  flex-direction: column;
+}
+.label {
+  display: block;
+  flex-grow: 1;
+  padding: 5px 5px 2px;
+}
+.swap {
+  background: #fdf;
+}
+.sfw {
+  background: #cfc;
+}
+.rhyme {
+  background: #9fd;
+}
+.leven {
+  background: #bf9;
+}
+.btnFavorRhymes {
+  background: #fdd;
+}
+.master {
+  background: #ddd;
+}
+
+.results {
+  margin-top: 100px;
 }

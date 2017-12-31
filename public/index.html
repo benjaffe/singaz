@@ -6,10 +6,26 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <label for="songSearch">Song Search / AZ URL</label><input type="text" id="songSearch">
-  <div id="attribution" class="attribution"></div>
-  <hr>
-  <div id="lyrics" class="lyrics"></div>
+  <div class="topbar">
+    <div class="buttons" id="buttons">
+      <div class="subButtons">
+        <label class="label rhyme" for="btnRhyme">Rhyme: <input type="range" id="btnRhyme" name="btnRhyme" value="Rhyme" min="0" max="100"></label>
+        <label class="label leven" for="btnLeven">Leven: <input type="range" id="btnLeven" name="btnLeven" value="Leven" min="0" max="100"></label>
+        <label class="label swap" for="btnSwap">Swap: <input type="checkbox" id="btnSwap" name="btnSwap" value="Swap"></label>
+        <label class="label btnFavorRhymes" for="label btnFavorRhymes">Favor Rhymes over Leven: <input type="checkbox" id="btnFavorRhymes" name="btnFavorRhymes" value="FavorRhymes"></label>
+        <label class="label sfw" for="btnSFW">SFW: <input type="checkbox" id="btnSFW" name="btnSFW" value="SFW"></label>
+      </div>
+      <label class="label master" for="btnMaster">Difficulty: <input type="range" id="btnMaster" name="btnMaster" value="Master" min="0" max="100"></label>
+    </div>
+    <label for="songSearch">Song Search / AZ URL</label><input type="text" id="songSearch">
+    <div id="title" class="title"></div>
+  </div>
+  <div class="results">
+    <div id="attribution" class="attribution"></div>
+    <hr>
+    <div id="lyrics" class="lyrics"></div>
+  </div>
+
   <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
   <script src="./script.js"></script>
 </body>
