@@ -8,83 +8,92 @@ const {
 const {mangleLyrics} = require('./src/mangleLyrics');
 
 const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
-app.use(express.static(__dirname + '/public'));
+const {throttle} = require('./src/utils');
 
-app.get('/song/', (req, res, next) => {
-  console.log('song request by url ', req.query.url);
+const tokenSocketThrottle = 100;
+
+const handleLoadSongByUrl = (socket, url) => {
+  console.log('song request by url ', url);
   let wordsToSendToClient = [];
-  if (!req.query.url.startsWith('https://www.azlyrics.com')) {
-    res.send({
-      type: 'error',
+  if (!url.startsWith('https://www.azlyrics.com')) {
+    socket.emit('err', {
       text: `Sorry, only urls from azlyrics.com are supported.`,
     });
     return;
   }
+  socket.emit('invalidate', true);
   // scrape page by url
-  getLyricsFromPage(req.query.url).then(
+  getLyricsFromPage(url).then(
     song => {
-      const sendWordQueue = throttle(() => {
-        res.send({type: 'tokens', tokens: wordsToSendToClient});
-        wordsToSendToClient = [];
-      }, 500);
+      let sentIndex = 0;
+      const sendWordQueue = throttle(words => {
+        if (!words || !Array.isArray(words)) return;
+        const wordsToSendToClient = words.slice(sentIndex);
+        console.log(`\nemitting ${wordsToSendToClient.length} tokens\n`);
+        socket.emit('tokens', {
+          tokens: wordsToSendToClient,
+        });
+        sentIndex += wordsToSendToClient.length;
+      }, tokenSocketThrottle);
 
-      // res.send({type: 'song', song: song});
+      // socket.emit('song',{
+      //   song: song
+      // });
       // console.log('yo');
       mangleLyrics(song.lyrics, newWords => {
-        wordsToSendToClient = wordsToSendToClient.concat(newWords);
-        sendWordQueue();
+        // console.log('newWords', newWords);
+        wordsToSendToClient.push.apply(wordsToSendToClient, newWords);
+        // console.log('wordsToSendToClient', wordsToSendToClient);
+        sendWordQueue(wordsToSendToClient);
       });
     },
     () => {
       console.log('failed');
     }
   );
-});
+};
 
-function throttle(callback, wait, context = this) {
-  let timeout = null;
-  let callbackArgs = null;
-
-  const later = () => {
-    callback.apply(context, callbackArgs);
-    timeout = null;
-  };
-
-  return function() {
-    if (!timeout) {
-      callbackArgs = arguments;
-      timeout = setTimeout(later, wait);
-    }
-  };
-}
-
-app.get('/search/', (req, res, next) => {
-  console.log('song request by search query ', req.query.q);
+const handleLoadSongByQuery = (socket, query) => {
+  console.log('song request by search query ', query);
   // get results for query
-  getSearchResultsFromPage(req.query.q).then(
+  getSearchResultsFromPage(query).then(
     results => {
       console.log('results gotten');
       const result = results.filter(r => r.url.startsWith('http'))[0];
       if (!result || !result.url) {
-        res.send({
-          type: 'error',
-          text: `unable to find results for query:\n${req.query.q}`,
+        socket.emit('err', {
+          text: `unable to find results for query:\n${query}`,
         });
         return;
       }
       const url = result.url;
-      // get lyrics for first result
-      getLyricsFromPage(url).then(song => {
-        console.log('song fetched', song);
-        res.send({type: 'song', song: song});
-      });
+      handleLoadSongByUrl(socket, url);
     },
     () => {
       console.log('failed');
     }
   );
+};
+
+io.on('connection', function(socket) {
+  console.log('a user connected');
+  socket.on('disconnect', function() {
+    console.log('user disconnected');
+  });
+
+  socket.on('loadSongByUrl', handleLoadSongByUrl.bind(null, socket));
+
+  socket.on('loadSongByQuery', handleLoadSongByQuery.bind(null, socket));
 });
+
+http.listen(3000, function() {
+  console.log('listening on *:3000');
+});
+
+app.use(express.static(__dirname + '/public'));
 
 var port = process.env.PORT || 5000;
 app.listen(port, () => {

@@ -17,15 +17,16 @@
       </div>
       <label class="label master" for="btnMaster">Difficulty: <input type="range" id="btnMaster" name="btnMaster" value="Master" min="0" max="100"></label>
     </div>
-    <label for="songSearch">Song Search / AZ URL</label><input type="text" id="songSearch">
+    <label for="songSearch">Song Search / AZ URL</label><input type="text" id="songSearch" value="https://www.azlyrics.com/lyrics/adele/hello.html">
     <div id="title" class="title"></div>
   </div>
   <div class="results">
     <div id="attribution" class="attribution"></div>
     <hr>
-    <div id="lyrics" class="lyrics"></div>
+    <div id="lyricsWrapper" class="lyrics"></div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
   <script src="./script.js"></script>
 </body>

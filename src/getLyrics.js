@@ -38,11 +38,6 @@ function getSearchResultsFromPage(url) {
     'https://search.azlyrics.com/search.php?q=' + url.split(' ').join('+');
   console.log(`looking for results at ${url}`);
   return scraperjs.StaticScraper.create(url).scrape($ => {
-    // console.log(
-    //   $('.container .panel')
-    //     .last()
-    //     .find('.table tr td a')
-    // );
     return $('.container .panel')
       .last()
       .find('.table tr')

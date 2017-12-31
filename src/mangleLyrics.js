@@ -4,10 +4,7 @@ const leven = require('leven');
 const syllable = require('syllable');
 const Tokenizer = require('tokenize-text');
 const tokenize = new Tokenizer();
-const {englishUsa, englishUsaNoSwears} = require('word-list-google');
-
-const allowSwears = true;
-const commonWordList = allowSwears ? englishUsa : englishUsaNoSwears;
+const {englishUsa} = require('word-list-google');
 
 let startTime = Date.now();
 let swapsCount = 0;
@@ -15,28 +12,23 @@ let randomRhymeCount = 0;
 let randomLevenCount = 0;
 let cacheHits = 0;
 
-const _mostCommonWords = commonWordList
+const minLengthToSwap = 3;
+
+const _mostCommonWords = englishUsa
   .map(w => w.toLowerCase())
-  .filter(w => w.length > 3);
+  .filter(w => w.length > minLengthToSwap);
 
-// const lyrics = fs.readFileSync('./data/lyrics-with-speaker.txt', 'utf-8');
-
-let wordsToProcess = 0;
-const whereToStart = 0;
 const SEARCH_RADIUS = 100;
 const MIN_REPLACEMENT_CANDIDATE_LENGTH = 4;
-const wordsNotToProcess = commonWordList
+const wordsNotToProcess = englishUsa
   .slice(0, 100)
   .concat(['though', 'through'])
   .map(s => s.toLowerCase());
 
-const wordsNotToReplaceWith = commonWordList
+const wordsNotToReplaceWith = englishUsa
   .slice(0, 100)
   .concat(['though', 'through'])
   .map(s => s.toLowerCase());
-
-const _rand = num => Math.floor(num * Math.random());
-const _randFromArray = arr => arr[_rand(arr.length)];
 
 let cache = {};
 
@@ -55,7 +47,6 @@ function tokenizeLyrics(lyrics) {
 
 function mangleLyrics(lyrics, callback) {
   const wordsTokenized = tokenize.words()(lyrics);
-  // wordsToProcess = wordsToProcess !== 0 ? wordsToProcess : wordsTokenized.length;
   const words = wordsTokenized.map(token => token.value);
   processWords(words, callback, {
     allWords: words,
@@ -74,7 +65,7 @@ function processWords(
   const restOfWords = words.slice(1);
   const processedStuff = processWord(word, i, allWords, wordsTokenized, lyrics);
   processedWordsInQueue = processedWordsInQueue.concat(processedStuff);
-  callback(processedWordsInQueue);
+  callback(processedStuff);
   setImmediate(() =>
     processWords(restOfWords, callback, {
       i: i + 1,
@@ -86,12 +77,11 @@ function processWords(
 }
 
 function processWord(val, i, arr, wordsTokenized, originalLyrics) {
-  console.log(val);
+  // console.log(val);
   let acc = [];
   let originalVal = val;
   let token = wordsTokenized[i];
   let nextToken = wordsTokenized[i + 1] || wordsTokenized[i];
-  console.log(`${i}/${wordsToProcess}: ${val} - ${token.value}`);
   let matches = arr
     .slice(i - SEARCH_RADIUS, i + SEARCH_RADIUS)
     .filter(r.doRhyme.bind(null, val))
@@ -108,6 +98,7 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
     acc.push(cache[val]);
     acc.push(_getInterstitial(token, nextToken, originalLyrics));
     cacheHits++;
+    console.log(`• ${i}: ${val} - ${token.value}`);
     return acc;
   }
 
@@ -134,6 +125,14 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
       wordObj.levenCandidates = levenCandidates.filter(_isValidReplacement);
     }
   }
+  console.log(
+    `  ${i}: ${wordObj.rhymeCandidates
+      ? wordObj.rhymeCandidates.length
+      : 0}/${wordObj.levenCandidates
+      ? wordObj.levenCandidates.length
+      : 0} ${val} - ${token.value}`
+  );
+
   acc.push(wordObj);
   acc.push(_getInterstitial(token, nextToken, originalLyrics));
   cache[originalVal] = wordObj;
@@ -159,81 +158,15 @@ function _getInterstitial(t1, t2, original) {
   return {isInterstitial: true, val: val};
 }
 
-function doHam(config) {
-  let startTime = Date.now();
-  let swapsCount = 0;
-  let randomRhymeCount = 0;
-  let randomLevenCount = 0;
-  let cacheHits = 0;
-  const result = _wordsIsolatedSanitized.reduce((acc, val, i, arr) => {
-    // let originalVal = val;
-    // let token = _wordsTokenized[i];
-    // let nextToken = _wordsTokenized[i + 1] || _wordsTokenized[i];
-    // console.log(`${i}/${wordsToProcess}: ${val} - ${token.value}`);
-    // let matches = arr
-    //   .slice(i - SEARCH_RADIUS, i + SEARCH_RADIUS)
-    //   .filter(r.doRhyme.bind(null, val))
-    //   .filter(val => !_isUpperCase(val))
-    //   .filter(val => val.length >= MIN_REPLACEMENT_CANDIDATE_LENGTH);
-    //
-    // if (_isTitle(val)) {
-    //   acc.push({val: val, isTitle: true});
-    //   acc.push(_getInterstitial(token, nextToken, lyrics));
-    //   return acc;
-    // }
-    //
-    // if (cache[val]) {
-    //   acc.push(cache[val]);
-    //   acc.push(_getInterstitial(token, nextToken, lyrics));
-    //   cacheHits++;
-    //   return acc;
-    // }
-    //
-    // let wordObj = {val: val};
-    //
-    // if (wordsNotToProcess.indexOf(val.toLowerCase()) === -1 && val.length > 2) {
-    //   // get swap words
-    //   if (matches.length) {
-    //     wordObj.swapWords = matches.filter(_isValidReplacement);
-    //     swapsCount++;
-    //   }
-    //
-    //   // get random rhyme candidates
-    //   const rhymeCandidates = _getRhymeCandidates(val);
-    //   if (rhymeCandidates.length > 0) {
-    //     randomRhymeCount++;
-    //     wordObj.rhymeCandidates = rhymeCandidates.filter(_isValidReplacement);
-    //   }
-    //
-    //   // get random leven candidates
-    //   const levenCandidates = _getLevenCandidates(val);
-    //   if (levenCandidates.length > 0) {
-    //     randomLevenCount++;
-    //     wordObj.levenCandidates = levenCandidates.filter(_isValidReplacement);
-    //   }
-    // }
-    // acc.push(wordObj);
-    // acc.push(_getInterstitial(token, nextToken, lyrics));
-    // cache[originalVal] = wordObj;
-    // return acc;
-  }, []);
-
-  fs.writeFileSync('./public/data.json', JSON.stringify(result, null, 2));
-  let duration = (Date.now() - startTime) / 1000;
-  console.log(
-    `Processed ${wordsToProcess} in ${duration} seconds, hitting the cache ${cacheHits} times, performed ${swapsCount} swaps, and ${randomRhymeCount} random rhyme replacements`
-  );
-}
-
 function _getRhymeCandidates(word) {
   let randomCandidates = r
     .rhyme(word)
     .map(s => s.toLowerCase())
     .filter(_isCommonEnoughWord);
   if (randomCandidates.length > 0) {
-    console.log(
-      `for word "${word}", found rhyme candidates "${randomCandidates}"`
-    );
+    // console.log(
+    //   `for word "${word}", found rhyme candidates "${randomCandidates}"`
+    // );
   }
   return randomCandidates;
 }
@@ -267,7 +200,7 @@ function _getLevenCandidates(word) {
     }
   });
   if (candidates.length > 0) {
-    console.log(`for word "${word}", found leven candidates "${candidates}"`);
+    // console.log(`for word "${word}", found leven candidates "${candidates}"`);
   }
   return totalScore < 3 && candidates.length > 0 ? candidates : [];
 }
