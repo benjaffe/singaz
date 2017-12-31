@@ -32,6 +32,11 @@ const wordsNotToReplaceWith = englishUsa
 
 let cache = {};
 
+setInterval(
+  () => console.log(`Cache has ${Object.keys(cache).length} items`),
+  10000
+);
+
 let r;
 rhyme(_r => {
   r = _r;

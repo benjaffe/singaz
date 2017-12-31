@@ -11,12 +11,12 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
-const {throttle} = require('./src/utils');
+const {throttle, isArrayWithLength} = require('./src/utils');
 
 const tokenSocketThrottle = 100;
 
 const handleLoadSongByUrl = (socket, url) => {
-  console.log('song request by url ', url);
+  console.log(`attempting to load url: ${url}`);
   let wordsToSendToClient = [];
   if (!url.startsWith('https://www.azlyrics.com')) {
     socket.emit('err', {
@@ -24,34 +24,30 @@ const handleLoadSongByUrl = (socket, url) => {
     });
     return;
   }
-  socket.emit('invalidate', true);
-  // scrape page by url
-  getLyricsFromPage(url).then(
+
+  getLyricsFromPage(url, socket).then(
     song => {
+      console.log(`loaded and parsed url: ${url}`);
+      socket.emit('invalidate', true);
       let sentIndex = 0;
+
+      // this function sends tokens back to the client, throttled
       const sendWordQueue = throttle(words => {
-        if (!words || !Array.isArray(words)) return;
-        const wordsToSendToClient = words.slice(sentIndex);
-        console.log(`\nemitting ${wordsToSendToClient.length} tokens\n`);
-        socket.emit('tokens', {
-          tokens: wordsToSendToClient,
-        });
-        sentIndex += wordsToSendToClient.length;
+        if (!isArrayWithLength(words)) return;
+        const tokens = words.slice(sentIndex); // only send new tokens
+        socket.emit('tokens', {tokens});
+        sentIndex = sentIndex + tokens.length;
       }, tokenSocketThrottle);
 
-      // socket.emit('song',{
-      //   song: song
-      // });
-      // console.log('yo');
       mangleLyrics(song.lyrics, newWords => {
-        // console.log('newWords', newWords);
         wordsToSendToClient.push.apply(wordsToSendToClient, newWords);
-        // console.log('wordsToSendToClient', wordsToSendToClient);
         sendWordQueue(wordsToSendToClient);
       });
     },
     () => {
-      console.log('failed');
+      socket.emit('err', {
+        text: `Unable to load lyrics from ${url}`,
+      });
     }
   );
 };
@@ -94,8 +90,3 @@ http.listen(3000, function() {
 });
 
 app.use(express.static(__dirname + '/public'));
-
-var port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log('Listening on ' + port);
-});

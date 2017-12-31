@@ -1,5 +1,6 @@
 .topbar {
   position: fixed;
+  z-index: 100;
   background: #aaa;
   left: 0;
   right: 0;
@@ -19,6 +20,7 @@
 }
 .lyrics {
   padding: 20px;
+  margin-bottom: 100px;
   font-family: monospace;
   white-space: pre-line;
 }

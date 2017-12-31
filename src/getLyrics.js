@@ -2,12 +2,11 @@
 
 const scraperjs = require('scraperjs');
 
-function getLyricsFromPage(url) {
+function getLyricsFromPage(url, socket) {
   console.log(`getLyricsFromPage: ${url}`);
   const scraper = scraperjs.StaticScraper.create(url);
   if (!scraper) {
-    res.send({
-      type: 'error',
+    socket.emit('err', {
       text: `unable to find results at url ${url}`,
     });
     return;
