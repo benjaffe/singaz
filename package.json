@@ -5,12 +5,14 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "start-dev": "supervisor server.js"
   },
   "author": "Ben Jaffe",
   "license": "ISC",
   "dependencies": {
     "express": "^4.13.3",
     "scraperjs": "^1.0.1"
-  }
+  },
+  "devDependencies": {}
 }
