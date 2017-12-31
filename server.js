@@ -1,7 +1,10 @@
-var express = require('express');
-var scraperjs = require('scraperjs');
+const path = require('path');
+const express = require('express');
+const scraperjs = require('scraperjs');
 
-var app = express();
+const app = express();
+
+const baseURL = 'https://www.azlyrics.com/';
 
 app.use(express.static(__dirname + '/public'));
 
@@ -24,17 +27,19 @@ app.get('/search/', (req, res, next) => {
   getSearchResultsFromPage(req.query.q).then(
     results => {
       console.log('results gotten');
-      console.log(results);
-      const result = results[0];
+      const result = results.filter(r => r.url.startsWith('http'))[0];
+      const url = result.url.startsWith('http')
+        ? result.url
+        : baseURL + result.url;
       if (!result) {
         res.send({
           type: 'error',
-          text: `unable to find results for query ${req.query.q}`,
+          text: `unable to find results for query:\n${req.query.q}`,
         });
         return;
       }
       // get lyrics for first result
-      getLyricsFromPage(results[0].url).then(song => {
+      getLyricsFromPage(url).then(song => {
         console.log('song fetched', song);
         // res.send({
         //   song: song,
@@ -65,7 +70,6 @@ function getLyricsFromPage(url) {
     return;
   }
   return scraper.scrape($ => {
-    console.log($('.smt:not(.noprint)'));
     return {
       attribution: $('.smt:not(.noprint)')
         .map(function() {
@@ -80,14 +84,16 @@ function getLyricsFromPage(url) {
         .eq(0)
         .nextAll('div')
         .eq(0)
-        .text(),
+        .text()
+        .trim(),
     };
   });
 }
 
 function getSearchResultsFromPage(url) {
   var url =
-    'http://search.azlyrics.com/search.php?q=' + url.split(' ').join('+');
+    'https://search.azlyrics.com/search.php?q=' + url.split(' ').join('+');
+  console.log(`looking for results at ${url}`);
   return scraperjs.StaticScraper.create(url).scrape($ => {
     // console.log(
     //   $('.container .panel')
@@ -97,8 +103,8 @@ function getSearchResultsFromPage(url) {
     return $('.container .panel')
       .last()
       .find('.table tr')
-      .map(function(elem) {
-        return {
+      .map(function() {
+        const result = {
           title: $(this)
             .find('a')
             .eq(0)
@@ -114,6 +120,7 @@ function getSearchResultsFromPage(url) {
             .find('td a')
             .attr('href'),
         };
+        return result;
       })
       .get();
   });
