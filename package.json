@@ -14,7 +14,7 @@
   "dependencies": {
     "express": "^4.13.3",
     "leven": "^2.1.0",
-    "rhyme-plus": "^0.0.7",
+    "pronouncing": "aparrish/pronouncingjs",
     "scraperjs": "^1.0.1",
     "socket.io": "^2.0.4",
     "syllable": "^2.2.0",

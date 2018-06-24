@@ -85,8 +85,8 @@ io.on('connection', function(socket) {
   socket.on('loadSongByQuery', handleLoadSongByQuery.bind(null, socket));
 });
 
-http.listen(3000, function() {
-  console.log('listening on *:3000');
+http.listen(8080, function() {
+  console.log('listening on *:8080');
 });
 
 app.use(express.static(__dirname + '/public'));
