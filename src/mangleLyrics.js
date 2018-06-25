@@ -17,12 +17,9 @@ const _mostCommonWords = englishUsa
   .map(w => w.toLowerCase())
   .filter(w => w.length > minLengthToSwap);
 
-const SEARCH_RADIUS = 100;
-const MIN_REPLACEMENT_CANDIDATE_LENGTH = 4;
-const wordsNotToProcess = englishUsa
-  .slice(0, 100)
-  .concat(['though', 'through'])
-  .map(s => s.toLowerCase());
+const swapSearchRadius = 100;
+const swapCandidateMinLength = 4;
+const {wordsToNotProcess} = require('./constants');
 
 const wordsNotToReplaceWith = englishUsa
   .slice(0, 100)
@@ -87,10 +84,10 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
   let token = wordsTokenized[i];
   let nextToken = wordsTokenized[i + 1] || wordsTokenized[i];
   let matches = arr
-    .slice(i - SEARCH_RADIUS, i + SEARCH_RADIUS)
+    .slice(i - swapSearchRadius, i + swapSearchRadius)
     // .filter(r.doRhyme.bind(null, val))
     .filter(val => !_isUpperCase(val))
-    .filter(val => val.length >= MIN_REPLACEMENT_CANDIDATE_LENGTH);
+    .filter(val => val.length >= swapCandidateMinLength);
 
   if (_isTitle(val)) {
     acc.push({val: val, isTitle: true});
@@ -100,7 +97,7 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
 
   let wordObj = {val: val};
 
-  if (wordsNotToProcess.indexOf(val.toLowerCase()) === -1 && val.length > 2) {
+  if (wordsToNotProcess.indexOf(val.toLowerCase()) === -1 && val.length > 2) {
     // get swap words
     if (matches.length) {
       wordObj.swapWords = matches.filter(_isValidReplacement);
