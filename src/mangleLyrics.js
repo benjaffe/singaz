@@ -1,7 +1,6 @@
 const fs = require('fs');
-const rhyme = require('rhyme-plus');
 const leven = require('leven');
-const syllable = require('syllable');
+const getSubstituteWords = require('./getSubstituteWords');
 const Tokenizer = require('tokenize-text');
 const tokenize = new Tokenizer();
 const {englishUsa} = require('word-list-google');
@@ -37,10 +36,10 @@ setInterval(
   10000
 );
 
-let r;
-rhyme(_r => {
-  r = _r;
-});
+// let r;
+// rhyme(_r => {
+//   r = _r;
+// });
 
 let processedWordsInQueue = [];
 
@@ -89,21 +88,13 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
   let nextToken = wordsTokenized[i + 1] || wordsTokenized[i];
   let matches = arr
     .slice(i - SEARCH_RADIUS, i + SEARCH_RADIUS)
-    .filter(r.doRhyme.bind(null, val))
+    // .filter(r.doRhyme.bind(null, val))
     .filter(val => !_isUpperCase(val))
     .filter(val => val.length >= MIN_REPLACEMENT_CANDIDATE_LENGTH);
 
   if (_isTitle(val)) {
     acc.push({val: val, isTitle: true});
     acc.push(_getInterstitial(token, nextToken, originalLyrics));
-    return acc;
-  }
-
-  if (cache[val]) {
-    acc.push(cache[val]);
-    acc.push(_getInterstitial(token, nextToken, originalLyrics));
-    cacheHits++;
-    console.log(`• ${i}: ${val} - ${token.value}`);
     return acc;
   }
 
@@ -117,8 +108,9 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
     }
 
     // get random rhyme candidates
-    const rhymeCandidates = _getRhymeCandidates(val);
-    if (rhymeCandidates.length > 0) {
+    const rhymeCandidates = getSubstituteWords(val).rhymes;
+    console.log(val, rhymeCandidates);
+    if (rhymeCandidates && rhymeCandidates.length > 0) {
       randomRhymeCount++;
       wordObj.rhymeCandidates = rhymeCandidates.filter(_isValidReplacement);
     }
@@ -131,11 +123,9 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
     }
   }
   console.log(
-    `  ${i}: ${wordObj.rhymeCandidates
-      ? wordObj.rhymeCandidates.length
-      : 0}/${wordObj.levenCandidates
-      ? wordObj.levenCandidates.length
-      : 0} ${val} - ${token.value}`
+    `  ${i}: ${wordObj.rhymeCandidates ? wordObj.rhymeCandidates.length : 0}/${
+      wordObj.levenCandidates ? wordObj.levenCandidates.length : 0
+    } ${val} - ${token.value}`
   );
 
   acc.push(wordObj);
@@ -152,28 +142,11 @@ const _isUpperCase = s =>
   s.length > 2 &&
   isNaN(Number(s));
 
-const _isCommonEnoughWord = w => {
-  return _mostCommonWords.indexOf(w.toLowerCase()) !== -1;
-};
-
 const _isValidReplacement = w => wordsNotToReplaceWith.indexOf(w) === -1;
 
 function _getInterstitial(t1, t2, original) {
   let val = original.slice(t1.index + t1.offset, t2.index);
   return {isInterstitial: true, val: val};
-}
-
-function _getRhymeCandidates(word) {
-  let randomCandidates = r
-    .rhyme(word)
-    .map(s => s.toLowerCase())
-    .filter(_isCommonEnoughWord);
-  if (randomCandidates.length > 0) {
-    // console.log(
-    //   `for word "${word}", found rhyme candidates "${randomCandidates}"`
-    // );
-  }
-  return randomCandidates;
 }
 
 function _getLevenCandidates(word) {
@@ -198,11 +171,11 @@ function _getLevenCandidates(word) {
       candidates = [];
       totalScore = score;
     }
-    if (score === totalScore) {
-      if (syllable(word) === syllable(dWord) && word.toLowerCase() !== dWord) {
-        candidates.push(dWord);
-      }
-    }
+    // if (score === totalScore) {
+    //   if (syllable(word) === syllable(dWord) && word.toLowerCase() !== dWord) {
+    //     candidates.push(dWord);
+    //   }
+    // }
   });
   if (candidates.length > 0) {
     // console.log(`for word "${word}", found leven candidates "${candidates}"`);
