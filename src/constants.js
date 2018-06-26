@@ -1,5 +1,20 @@
 'use strict';
 
+const verboseLogging = false;
+
+const levenCoolWords = [
+  'fart',
+  'lumpy',
+  'poop',
+  'pee',
+  'boop',
+  'beep',
+  'beeper',
+  'chicken',
+  'monkey',
+  'crap',
+];
+const levenUncoolWords = ['donut', 'donate', 'greatness'];
 const wordsToNotProcess = [
   'the',
   'of',
@@ -86,4 +101,7 @@ const wordsToNotProcess = [
 
 module.exports = {
   wordsToNotProcess,
+  verboseLogging,
+  levenCoolWords,
+  levenUncoolWords,
 };

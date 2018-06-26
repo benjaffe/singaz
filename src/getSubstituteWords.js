@@ -7,16 +7,11 @@ const pronouncing = require('pronouncing');
 const leven = require('leven');
 const {englishUsa} = require('word-list-google');
 
-const {dedupe} = require('./utils');
+const {dedupe, sameSyllableCountAs} = require('./utils');
 const {wordList, getWord, getPos, getWordObj} = require('./wordList');
 
 const _toLowerCase = str => str.toLowerCase();
 const mostCommonWords = englishUsa.map(_toLowerCase);
-
-const _sameSyllableCountAs = origWord => word =>
-  _getSyllableCount(origWord) === _getSyllableCount(word);
-const _getSyllableCount = word =>
-  pronouncing.syllableCount(pronouncing.phonesForWord(word)[0]);
 
 /**
  * @return  function which returns true if the word passed into it is the same
@@ -58,7 +53,7 @@ function getSubstituteWords(_word, opts) {
     .rhymes(word)
     .map(_toLowerCase)
     .filter(dedupe)
-    .filter(_sameSyllableCountAs(word))
+    .filter(sameSyllableCountAs(word))
     .filter(_isCommon)
     .filter(_isSamePartOfSpeechAs(word))
     .sort(_sortByFrequency);

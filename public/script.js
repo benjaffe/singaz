@@ -2,6 +2,8 @@
 
 const socket = io();
 
+const karaokeVideos = ['YCLyAmXtpfY', 'XjuE4DKw0Hg', 'h5y-oiu2f98'];
+
 const songSearchElem = document.getElementById('songSearch');
 const bannedWordsElem = document.getElementById('bannedWords');
 const attributionElem = document.getElementById('attribution');
@@ -120,6 +122,47 @@ socket.on('invalidate', res => {
 socket.on('err', res => {
   alert(`error: ${res.text}`);
 });
+socket.on('videoUpdate', res => {
+  console.log('videoUpdate', res);
+  player.cuePlaylist({
+    listType: 'search',
+    list: res,
+  });
+});
+
+// init youtube player
+let player;
+const playerID = 'ytplayer';
+(function() {
+  const playerElem = document.getElementById(playerID);
+  const tag = document.createElement('script');
+
+  tag.src = 'https://www.youtube.com/iframe_api';
+  const firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  playerElem.addEventListener('click', e => {
+    player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo();
+  });
+})();
+
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player(playerID, {
+    height: '240',
+    width: '320',
+    videoId: karaokeVideos[Math.floor(Math.random() * karaokeVideos.length)],
+    events: {
+      onReady: event => event.target.playVideo(),
+      onStateChange: event => {
+        if (event.data === YT.PlayerState.CUED) {
+          event.target.playVideo();
+        }
+        if (event.data === YT.PlayerState.ENDED) {
+          event.target.stopVideo();
+        }
+      },
+    },
+  });
+}
 
 let rhymeProbability = 1;
 let levenProbability = 0;

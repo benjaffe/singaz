@@ -1,6 +1,12 @@
 const fs = require('fs');
 const leven = require('leven');
 const getSubstituteWords = require('./getSubstituteWords');
+const {sameSyllableCountAs} = require('./utils');
+const {
+  verboseLogging,
+  levenCoolWords,
+  levenUncoolWords,
+} = require('./constants');
 const Tokenizer = require('tokenize-text');
 const tokenize = new Tokenizer();
 const {englishUsa} = require('word-list-google');
@@ -9,7 +15,6 @@ let startTime = Date.now();
 let swapsCount = 0;
 let randomRhymeCount = 0;
 let randomLevenCount = 0;
-let cacheHits = 0;
 
 const minLengthToSwap = 3;
 
@@ -25,18 +30,6 @@ const wordsNotToReplaceWith = englishUsa
   .slice(0, 100)
   .concat(['though', 'through'])
   .map(s => s.toLowerCase());
-
-let cache = {};
-
-setInterval(
-  () => console.log(`Cache has ${Object.keys(cache).length} items`),
-  10000
-);
-
-// let r;
-// rhyme(_r => {
-//   r = _r;
-// });
 
 let processedWordsInQueue = [];
 
@@ -78,7 +71,6 @@ function processWords(
 }
 
 function processWord(val, i, arr, wordsTokenized, originalLyrics) {
-  // console.log(val);
   let acc = [];
   let originalVal = val;
   let token = wordsTokenized[i];
@@ -99,35 +91,41 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
 
   if (wordsToNotProcess.indexOf(val.toLowerCase()) === -1 && val.length > 2) {
     // get swap words
-    if (matches.length) {
-      wordObj.swapWords = matches.filter(_isValidReplacement);
-      swapsCount++;
-    }
+    // if (matches.length) {
+    //   wordObj.swapWords = matches.filter(_isValidReplacement);
+    //   swapsCount++;
+    // }
 
     // get random rhyme candidates
     const rhymeCandidates = getSubstituteWords(val).rhymes;
-    console.log(val, rhymeCandidates);
+    if (verboseLogging) {
+      console.log(val, rhymeCandidates);
+    }
     if (rhymeCandidates && rhymeCandidates.length > 0) {
       randomRhymeCount++;
       wordObj.rhymeCandidates = rhymeCandidates.filter(_isValidReplacement);
     }
 
     // get random leven candidates
-    const levenCandidates = _getLevenCandidates(val);
+    // const levenCandidates = _getLevenCandidates(val); // skip leven
+    const levenCandidates = [];
     if (levenCandidates.length > 0) {
       randomLevenCount++;
       wordObj.levenCandidates = levenCandidates.filter(_isValidReplacement);
     }
   }
-  console.log(
-    `  ${i}: ${wordObj.rhymeCandidates ? wordObj.rhymeCandidates.length : 0}/${
-      wordObj.levenCandidates ? wordObj.levenCandidates.length : 0
-    } ${val} - ${token.value}`
-  );
+  if (verboseLogging) {
+    console.log(
+      `  ${i}: ${
+        wordObj.rhymeCandidates ? wordObj.rhymeCandidates.length : 0
+      }/${
+        wordObj.levenCandidates ? wordObj.levenCandidates.length : 0
+      } ${val} - ${token.value}`
+    );
+  }
 
   acc.push(wordObj);
   acc.push(_getInterstitial(token, nextToken, originalLyrics));
-  cache[originalVal] = wordObj;
   return acc;
 }
 
@@ -147,32 +145,27 @@ function _getInterstitial(t1, t2, original) {
 }
 
 function _getLevenCandidates(word) {
-  // prettier-ignore
-  const COOL_WORDS = [
-    'fart','lumpy','poop','pee','boop','beep','beeper','chicken','monkey','crap'
-  ];
-  const UNCOOL_WORDS = ['donut', 'donate', 'greatness'];
   let totalScore = 1000;
   let candidates = [];
   _mostCommonWords.forEach(dWord => {
     // if the dictionary word we're considering is the word we're comparing
     // against, or if the word is uncool, skip it
-    if (dWord === word || UNCOOL_WORDS.indexOf(dWord) !== -1) {
+    if (dWord === word || levenUncoolWords.indexOf(dWord) !== -1) {
       return;
     }
     let score = leven(word, dWord);
-    if (COOL_WORDS.indexOf(dWord) !== -1) {
+    if (levenCoolWords.indexOf(dWord) !== -1) {
       score--;
     }
     if (score < totalScore) {
       candidates = [];
       totalScore = score;
     }
-    // if (score === totalScore) {
-    //   if (syllable(word) === syllable(dWord) && word.toLowerCase() !== dWord) {
-    //     candidates.push(dWord);
-    //   }
-    // }
+    if (score === totalScore) {
+      if (sameSyllableCountAs(word)(dWord) && word.toLowerCase() !== dWord) {
+        candidates.push(dWord);
+      }
+    }
   });
   if (candidates.length > 0) {
     // console.log(`for word "${word}", found leven candidates "${candidates}"`);
