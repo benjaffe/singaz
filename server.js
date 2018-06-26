@@ -32,7 +32,7 @@ const mangleAndLoadSong = ({lyrics}, socket) => {
 };
 
 const loadKaraokeVideo = ({title}, socket) => {
-  const query = `${title} karaoke`;
+  const query = `${title} karaoke instrumental`;
   console.log(`searching for youtube video with query, "${query}"`);
   socket.emit('videoUpdate', query);
 };
