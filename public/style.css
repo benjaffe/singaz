@@ -5,7 +5,21 @@
   left: 0;
   right: 0;
   top: 0;
+  height: 30px;
+  transition: 0.3s height;
+}
+.topbar:hover {
   height: 100px;
+  transition-delay: 1s;
+}
+.topbar .visibleOnHover {
+  height: 0px;
+  transition: 0.3s height;
+  overflow: hidden;
+}
+.topbar:hover .visibleOnHover {
+  height: 70px;
+  transition-delay: 1s;
 }
 .title {
   background: #fcf;
@@ -58,12 +72,12 @@
 }
 
 .results {
-  margin-top: 100px;
+  margin-top: 30px;
 }
 
 #ytplayer {
   float: right;
   margin: 10px;
   position: relative;
-  z-index: 100;
+  z-index: 50;
 }
