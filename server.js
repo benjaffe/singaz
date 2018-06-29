@@ -11,6 +11,9 @@ const {throttle, isArrayWithLength} = require('./src/utils');
 
 const tokenSocketThrottle = 100;
 
+// load env variables when running locally
+require('dotenv').config();
+
 let wordsToSendToClient;
 const mangleAndLoadSong = ({lyrics}, socket) => {
   socket.emit('invalidate', true);
@@ -37,9 +40,8 @@ const loadKaraokeVideo = ({title}, socket) => {
   socket.emit('videoUpdate', query);
 };
 
-const {genius: geniusKey} = require('./api-keys');
 const Lyricist = require('lyricist');
-const lyricist = new Lyricist(geniusKey);
+const lyricist = new Lyricist(process.env.GENIUS_KEY);
 
 const handleLoadSongByQuery = async (socket, query) => {
   if (query.length > 100) {
