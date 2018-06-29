@@ -12,7 +12,7 @@ const {throttle, isArrayWithLength} = require('./src/utils');
 const tokenSocketThrottle = 100;
 
 // load env variables when running locally
-require('dotenv').config();
+require('now-env');
 
 let wordsToSendToClient;
 const mangleAndLoadSong = ({lyrics}, socket) => {
