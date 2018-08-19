@@ -1,0 +1,5 @@
+{
+  "env": {
+    "GENIUS_KEY": "@genius-key"
+  }
+}

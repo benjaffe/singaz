@@ -7,7 +7,7 @@
 </head>
 <body>
   <div class="topbar">
-    <div class="buttons" id="buttons">
+    <div class="buttons visibleOnHover" id="buttons">
       <div class="subButtons">
         <label class="label rhyme" for="btnRhyme">Rhyme: <input type="range" id="btnRhyme" name="btnRhyme" value="Rhyme" min="0" max="100"></label>
         <label class="label leven" for="btnLeven">Leven: <input type="range" id="btnLeven" name="btnLeven" value="Leven" min="0" max="100"></label>
@@ -17,8 +17,10 @@
       </div>
       <label class="label master" for="btnMaster">Difficulty: <input type="range" id="btnMaster" name="btnMaster" value="Master" min="0" max="100"></label>
     </div>
-    <label for="songSearch">Song Search</label><input type="text" id="songSearch" value="hello"></input>
-    <label for="bannedWords">Banned Words:</label><input type="text" id="bannedWords" value="gym, per, cancer"></input>
+    <label for="songSearch">Song Search</label><textarea rows="1" type="text" id="songSearch" value="hello"></textarea>
+    <div class="visibleOnHover" >
+      <label for="bannedWords">Banned Words:</label><input type="text" id="bannedWords" value="gym, per, gmbh, dr, cancer"></input>
+    </div>
     <div id="title" class="title"></div>
   </div>
   <div class="results">
