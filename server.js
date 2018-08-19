@@ -1,10 +1,6 @@
 'use strict';
 const express = require('express');
 
-const {
-  getLyricsFromPage,
-  getSearchResultsFromPage,
-} = require('./src/getLyrics');
 const {mangleLyrics} = require('./src/mangleLyrics');
 
 const app = express();
@@ -15,63 +11,52 @@ const {throttle, isArrayWithLength} = require('./src/utils');
 
 const tokenSocketThrottle = 100;
 
-const handleLoadSongByUrl = (socket, url) => {
-  console.log(`attempting to load url: ${url}`);
-  let wordsToSendToClient = [];
-  if (!url.startsWith('https://www.azlyrics.com')) {
-    socket.emit('err', {
-      text: `Sorry, only urls from azlyrics.com are supported.`,
-    });
+let wordsToSendToClient;
+const mangleAndLoadSong = ({lyrics}, socket) => {
+  socket.emit('invalidate', true);
+  wordsToSendToClient = [];
+  let sentIndex = 0;
+
+  // this function sends tokens back to the client, throttled
+  const sendWordQueue = throttle(words => {
+    if (!isArrayWithLength(words)) return;
+    const tokens = words.slice(sentIndex); // only send new tokens
+    socket.emit('tokens', {tokens});
+    sentIndex = sentIndex + tokens.length;
+  }, tokenSocketThrottle);
+
+  mangleLyrics(lyrics, newWords => {
+    wordsToSendToClient.push.apply(wordsToSendToClient, newWords);
+    sendWordQueue(wordsToSendToClient);
+  });
+};
+
+const loadKaraokeVideo = ({title}, socket) => {
+  const query = `${title} karaoke instrumental`;
+  console.log(`searching for youtube video with query, "${query}"`);
+  socket.emit('videoUpdate', query);
+};
+
+const {genius: geniusKey} = require('./api-keys');
+const Lyricist = require('lyricist');
+const lyricist = new Lyricist(geniusKey);
+
+const handleLoadSongByQuery = async (socket, query) => {
+  if (query.length > 100) {
+    console.log('interpreting the query as direct lyrics input');
+    mangleAndLoadSong({lyrics: query}, socket);
     return;
   }
 
-  getLyricsFromPage(url, socket).then(
-    song => {
-      console.log(`loaded and parsed url: ${url}`);
-      socket.emit('invalidate', true);
-      let sentIndex = 0;
-
-      // this function sends tokens back to the client, throttled
-      const sendWordQueue = throttle(words => {
-        if (!isArrayWithLength(words)) return;
-        const tokens = words.slice(sentIndex); // only send new tokens
-        socket.emit('tokens', {tokens});
-        sentIndex = sentIndex + tokens.length;
-      }, tokenSocketThrottle);
-
-      mangleLyrics(song.lyrics, newWords => {
-        wordsToSendToClient.push.apply(wordsToSendToClient, newWords);
-        sendWordQueue(wordsToSendToClient);
-      });
-    },
-    () => {
-      socket.emit('err', {
-        text: `Unable to load lyrics from ${url}`,
-      });
-    }
-  );
-};
-
-const handleLoadSongByQuery = (socket, query) => {
-  console.log('song request by search query ', query);
-  // get results for query
-  getSearchResultsFromPage(query).then(
-    results => {
-      console.log('results gotten');
-      const result = results.filter(r => r.url.startsWith('http'))[0];
-      if (!result || !result.url) {
-        socket.emit('err', {
-          text: `unable to find results for query:\n${query}`,
-        });
-        return;
-      }
-      const url = result.url;
-      handleLoadSongByUrl(socket, url);
-    },
-    () => {
-      console.log('failed');
-    }
-  );
+  // TODO: test error handling
+  console.log(`loading song with initial query, "${query}"`);
+  const searchResults = await lyricist.search(encodeURIComponent(query));
+  // TODO: add support for multiple results
+  const searchResult = searchResults[0];
+  const song = await lyricist.song(searchResult.id, {fetchLyrics: true});
+  console.log(`loaded song "${song.full_title}"`);
+  mangleAndLoadSong(song, socket);
+  loadKaraokeVideo(song, socket);
 };
 
 io.on('connection', function(socket) {
@@ -80,13 +65,11 @@ io.on('connection', function(socket) {
     console.log('user disconnected');
   });
 
-  socket.on('loadSongByUrl', handleLoadSongByUrl.bind(null, socket));
-
   socket.on('loadSongByQuery', handleLoadSongByQuery.bind(null, socket));
 });
 
-http.listen(3000, function() {
-  console.log('listening on *:3000');
+http.listen(8080, function() {
+  console.log('listening on *:8080');
 });
 
 app.use(express.static(__dirname + '/public'));
