@@ -51,7 +51,7 @@ const _clone = obj => JSON.parse(JSON.stringify(obj));
 const _masterSwapper = (word, classToUse, keyName) => {
   let replacement = _randomValueFromArr(
     word[keyName].filter(word => !bannedWords.includes(word)),
-    word.val
+    word.val,
   );
   if (replacement !== word.val) {
     word.originalVal = word.val;

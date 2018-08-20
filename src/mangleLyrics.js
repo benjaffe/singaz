@@ -1,7 +1,7 @@
 const fs = require('fs');
 const leven = require('leven');
 const getSubstituteWords = require('./getSubstituteWords');
-const {sameSyllableCountAs} = require('./utils');
+const { sameSyllableCountAs } = require('./utils');
 const {
   verboseLogging,
   levenCoolWords,
@@ -9,7 +9,7 @@ const {
 } = require('./constants');
 const Tokenizer = require('tokenize-text');
 const tokenize = new Tokenizer();
-const {englishUsa} = require('word-list-google');
+const { englishUsa } = require('word-list-google');
 
 let startTime = Date.now();
 let swapsCount = 0;
@@ -24,7 +24,7 @@ const _mostCommonWords = englishUsa
 
 const swapSearchRadius = 100;
 const swapCandidateMinLength = 4;
-const {wordsToNotProcess} = require('./constants');
+const { wordsToNotProcess } = require('./constants');
 
 const wordsNotToReplaceWith = englishUsa
   .slice(0, 100)
@@ -52,7 +52,7 @@ function mangleLyrics(lyrics, callback) {
 function processWords(
   words,
   callback,
-  {i = 0, allWords, wordsTokenized, lyrics}
+  { i = 0, allWords, wordsTokenized, lyrics },
 ) {
   const word = words[0];
   if (!word) return;
@@ -66,7 +66,7 @@ function processWords(
       allWords,
       wordsTokenized,
       lyrics,
-    })
+    }),
   );
 }
 
@@ -82,12 +82,12 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
     .filter(val => val.length >= swapCandidateMinLength);
 
   if (_isTitle(val)) {
-    acc.push({val: val, isTitle: true});
+    acc.push({ val: val, isTitle: true });
     acc.push(_getInterstitial(token, nextToken, originalLyrics));
     return acc;
   }
 
-  let wordObj = {val: val};
+  let wordObj = { val: val };
 
   if (wordsToNotProcess.indexOf(val.toLowerCase()) === -1 && val.length > 2) {
     // get swap words
@@ -120,7 +120,7 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
         wordObj.rhymeCandidates ? wordObj.rhymeCandidates.length : 0
       }/${
         wordObj.levenCandidates ? wordObj.levenCandidates.length : 0
-      } ${val} - ${token.value}`
+      } ${val} - ${token.value}`,
     );
   }
 
@@ -141,7 +141,7 @@ const _isValidReplacement = w => wordsNotToReplaceWith.indexOf(w) === -1;
 
 function _getInterstitial(t1, t2, original) {
   let val = original.slice(t1.index + t1.offset, t2.index);
-  return {isInterstitial: true, val: val};
+  return { isInterstitial: true, val: val };
 }
 
 function _getLevenCandidates(word) {
@@ -173,4 +173,4 @@ function _getLevenCandidates(word) {
   return totalScore < 3 && candidates.length > 0 ? candidates : [];
 }
 
-module.exports = {mangleLyrics, tokenizeLyrics};
+module.exports = { mangleLyrics, tokenizeLyrics };
