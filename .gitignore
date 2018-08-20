@@ -2,3 +2,4 @@ node_modules
 .DS_Store
 now-secrets.json
 /data/cache.json
+/data/biblicalWordMap.json

@@ -14,6 +14,7 @@ const { englishUsa } = require('word-list-google');
 let startTime = Date.now();
 let swapsCount = 0;
 let randomRhymeCount = 0;
+let randomBiblicalCount = 0;
 let randomLevenCount = 0;
 
 const minLengthToSwap = 3;
@@ -104,6 +105,18 @@ function processWord(val, i, arr, wordsTokenized, originalLyrics) {
     if (rhymeCandidates && rhymeCandidates.length > 0) {
       randomRhymeCount++;
       wordObj.rhymeCandidates = rhymeCandidates.filter(_isValidReplacement);
+    }
+
+    // get random biblical candidates
+    const biblicalCandidates = getSubstituteWords(val).biblical;
+    if (verboseLogging) {
+      console.log(val, biblicalCandidates);
+    }
+    if (biblicalCandidates && biblicalCandidates.length > 0) {
+      randomBiblicalCount++;
+      wordObj.biblicalCandidates = biblicalCandidates.filter(
+        _isValidReplacement,
+      );
     }
 
     // get random leven candidates

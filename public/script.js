@@ -10,6 +10,7 @@ const attributionElem = document.getElementById('attribution');
 const lyricsWrapperElem = document.getElementById('lyricsWrapper');
 const btnWrapperElem = document.getElementById('buttons');
 const btnRhymeElem = document.getElementById('btnRhyme');
+const btnBiblicalElem = document.getElementById('btnBiblical');
 const btnLevenElem = document.getElementById('btnLeven');
 const btnSwapElem = document.getElementById('btnSwap');
 const btnFavorRhymesElem = document.getElementById('btnFavorRhymes');
@@ -78,6 +79,19 @@ const _rhymeSwapper = w => {
   ) {
     // console.log('rhyme ' + w.val);
     return _masterSwapper(w, 'rhyme', 'rhymeCandidates');
+  }
+  return w;
+};
+
+const _biblicalSwapper = w => {
+  if (
+    !w.mutated &&
+    w.biblicalCandidates &&
+    w.biblicalCandidates.length > 0 &&
+    _resolveProbability(biblicalProbability * masterMultiplier)
+  ) {
+    // console.log('biblical ' + w.val);
+    return _masterSwapper(w, 'biblical', 'biblicalCandidates');
   }
   return w;
 };
@@ -165,6 +179,7 @@ function onYouTubeIframeAPIReady() {
 }
 
 let rhymeProbability = 1;
+let biblicalProbability = 0.5;
 let levenProbability = 0;
 let masterMultiplier = 1;
 let swap = false;
@@ -184,6 +199,7 @@ function recalculateLyrics() {
   console.log(words.length);
   lyricsWrapperElem.innerHTML = _clone(words)
     .map(_wordSwapper)
+    .map(_biblicalSwapper)
     .map(favorRhymes ? _rhymeSwapper : _levenSwapper)
     .map(favorRhymes ? _levenSwapper : _rhymeSwapper)
     .map(w => w.val)
@@ -193,6 +209,7 @@ function recalculateLyrics() {
 function init() {
   document.body.style.display = 'block';
   btnRhymeElem.value = rhymeProbability * 100;
+  btnBiblicalElem.value = biblicalProbability * 100;
   btnLevenElem.value = levenProbability * 100;
   btnMasterElem.value = masterMultiplier * 100;
   btnSwapElem.checked = swap;
@@ -201,6 +218,11 @@ function init() {
 
   btnRhymeElem.addEventListener('input', function(e) {
     rhymeProbability = e.target.value / 100;
+    recalculateLyrics();
+  });
+
+  btnBiblicalElem.addEventListener('input', function(e) {
+    biblicalProbability = e.target.value / 100;
     recalculateLyrics();
   });
 

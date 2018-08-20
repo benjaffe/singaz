@@ -43,10 +43,23 @@ const cache = fs.existsSync(cachePath)
   ? JSON.parse(fs.readFileSync(cachePath))
   : {};
 
+const biblicalWordMap = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '../data/biblicalWordMap.json')),
+);
+
 function getSubstituteWords(_word, opts) {
   const word = _word.toLowerCase();
+  const frequencies = biblicalWordMap[word];
+  const biblical =
+    frequencies == null
+      ? []
+      : Object.keys(frequencies)
+          .sort((a, b) => frequencies[b] - frequencies[a])
+          .map(_toLowerCase)
+          .filter(sameSyllableCountAs(word));
+
   if (cache[word] != null) {
-    return cache[word];
+    return {biblical, ...cache[word]};
   }
 
   const rhymes = pronouncing
@@ -58,7 +71,7 @@ function getSubstituteWords(_word, opts) {
     .filter(_isSamePartOfSpeechAs(word))
     .sort(_sortByFrequency);
 
-  const newWord = {rhymes, pos: getPos(word)};
+  const newWord = {rhymes, biblical, pos: getPos(word)};
   cache[word] = newWord;
   fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2));
   return newWord;
