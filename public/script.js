@@ -197,13 +197,16 @@ init();
 function recalculateLyrics() {
   random.reset();
   console.log(words.length);
-  lyricsWrapperElem.innerHTML = _clone(words)
+  const wordsWithBible = _clone(words)
     .map(_wordSwapper)
-    .map(_biblicalSwapper)
+    .map(_biblicalSwapper);
+
+  random.reset();
+  const wordsWithEverything = wordsWithBible
     .map(favorRhymes ? _rhymeSwapper : _levenSwapper)
-    .map(favorRhymes ? _levenSwapper : _rhymeSwapper)
-    .map(w => w.val)
-    .join('');
+    .map(favorRhymes ? _levenSwapper : _rhymeSwapper);
+
+  lyricsWrapperElem.innerHTML = wordsWithEverything.map(w => w.val).join('');
 }
 
 function init() {
