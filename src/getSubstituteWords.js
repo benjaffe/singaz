@@ -39,9 +39,15 @@ const _sortByFrequency = (a, b) =>
 const _isCommon = w => mostCommonWords.includes(w);
 
 const cachePath = path.join(__dirname, '../data/cache.json');
-const cache = fs.existsSync(cachePath)
-  ? JSON.parse(fs.readFileSync(cachePath))
-  : {};
+let cache;
+try {
+  cache = fs.existsSync(cachePath)
+    ? JSON.parse(fs.readFileSync(cachePath))
+    : {};
+} catch (e) {
+  console.log(e);
+  cache = {};
+}
 
 const biblicalWordMap = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../data/biblicalWordMap.json')),
@@ -73,7 +79,12 @@ function getSubstituteWords(_word, opts) {
 
   const newWord = {rhymes, biblical, pos: getPos(word)};
   cache[word] = newWord;
-  fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2));
+  try {
+    fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2));
+  } catch (e) {
+    console.error(e);
+    console.log('swallow the error and carrying on...');
+  }
   return newWord;
 }
 
